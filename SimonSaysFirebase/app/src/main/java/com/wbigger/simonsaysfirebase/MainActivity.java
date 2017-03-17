@@ -95,11 +95,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void sendButton0Event(View view) {
-        Log.d(TAG,"Button 0 Pressed");
+        Log.d(TAG, "Button 0 Pressed");
+        sendButtonEventToFirebase(0);
     }
 
     public void sendButton1Event(View view) {
         Log.d(TAG,"Button 1 Pressed");
+        sendButtonEventToFirebase(1);
+    }
+
+    public void sendButtonEventToFirebase(int btnIdx) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference keyRef = database.getReference("key");
+        keyRef.setValue(btnIdx);
+
     }
 
     public void setBackgroundColor(Button button, int color) {
