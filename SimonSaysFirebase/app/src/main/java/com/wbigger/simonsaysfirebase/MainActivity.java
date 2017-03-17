@@ -108,4 +108,5 @@ public class MainActivity extends AppCompatActivity {
 
     private void animateButtons() {
         mButtons[0].startAnimation(mAnimationBlink);
+        mButtons[1].startAnimation(mAnimationBlink);
     }}
