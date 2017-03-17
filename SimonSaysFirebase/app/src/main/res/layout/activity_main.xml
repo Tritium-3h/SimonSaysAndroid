@@ -7,15 +7,15 @@
     tools:context="com.wbigger.simonsaysfirebase.MainActivity">
 
     <Button
-        android:id="@+id/buttonBlue"
+        android:id="@+id/button0"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginBottom="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginTop="8dp"
-        android:background="@android:color/holo_blue_light"
-        android:onClick="sendBlueButtonEvent"
+        android:background="@color/b0Idle"
+        android:onClick="sendButton0Event"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@+id/guideline"
@@ -26,7 +26,7 @@
         tools:layout_constraintTop_creator="1" />
 
     <Button
-        android:id="@+id/buttonGreen"
+        android:id="@+id/button1"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginBottom="8dp"
@@ -34,8 +34,8 @@
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginTop="8dp"
-        android:background="@android:color/holo_green_light"
-        android:onClick="sendGreenButtonEvent"
+        android:background="@color/b1Idle"
+        android:onClick="sendButton1Event"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintLeft_toLeftOf="@+id/guideline"
