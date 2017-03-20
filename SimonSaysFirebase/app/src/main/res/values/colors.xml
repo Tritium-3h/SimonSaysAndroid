@@ -9,10 +9,10 @@
     <color name="b1Idle">#81C784</color>
     <color name="b1Active">#1B5E20</color>
 
-    <!--<color name="b2Idle">#FFEB3B</color>-->
-    <!--<color name="b2Active">#F57F17k</color>-->
-    <!--<color name="b3Idle">#F44336</color>-->
-    <!--<color name="b3Active">#B71C1C</color>-->
+    <color name="b2Idle">#FFEB3B</color>
+    <color name="b2Active">#F57F17</color>
+    <color name="b3Idle">#F44336</color>
+    <color name="b3Active">#B71C1C</color>
 
 
 

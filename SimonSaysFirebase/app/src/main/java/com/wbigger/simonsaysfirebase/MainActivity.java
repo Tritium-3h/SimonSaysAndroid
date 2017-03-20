@@ -11,6 +11,7 @@ import android.widget.Button;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseException;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
@@ -18,7 +19,12 @@ import com.google.firebase.database.ValueEventListener;
 public class MainActivity extends AppCompatActivity {
 
     static final String TAG = "MainActivity";
-    Button mButtons[] = new Button[2];
+
+    static final int BUTTONS_NUM = 4;
+    Button mButtons[] = new Button[BUTTONS_NUM];
+    int mColorsIdle[] = new int[BUTTONS_NUM];
+    int mColorsActive[] = new int[BUTTONS_NUM];
+
     Animation mAnimationBlink;
 
 
@@ -29,6 +35,18 @@ public class MainActivity extends AppCompatActivity {
 
         mButtons[0] = (Button) findViewById(R.id.button0);
         mButtons[1] = (Button) findViewById(R.id.button1);
+        mButtons[2] = (Button) findViewById(R.id.button2);
+        mButtons[3] = (Button) findViewById(R.id.button3);
+
+        mColorsIdle[0] = R.color.b0Idle;
+        mColorsIdle[1] = R.color.b1Idle;
+        mColorsIdle[2] = R.color.b2Idle;
+        mColorsIdle[3] = R.color.b3Idle;
+
+        mColorsActive[0] = R.color.b0Active;
+        mColorsActive[1] = R.color.b1Active;
+        mColorsActive[2] = R.color.b2Active;
+        mColorsActive[3] = R.color.b3Active;
 
         mAnimationBlink = AnimationUtils.loadAnimation(this,R.anim.blink_animation);
 
@@ -62,18 +80,21 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
-                String value = dataSnapshot.getValue(String.class);
-                Log.d(TAG, "Value is: " + value);
                 resetBackgroundColors();
-                switch (value) {
-                    case "0":
-                        setBackgroundColor(mButtons[0],R.color.b0Active);
-                        break;
-                    case "1":
-                        setBackgroundColor(mButtons[1],R.color.b1Active);
-                        break;
-                    default:
-                        // nothing to do
+                try {
+                    String value = dataSnapshot.getValue(String.class);
+                    Log.d(TAG, "Value is: " + value);
+                    int valueInt = Integer.valueOf(value);
+                    if ((valueInt >= 0) && (valueInt < BUTTONS_NUM)) {
+                        setBackgroundColor(mButtons[valueInt], mColorsActive[valueInt]);
+                    }
+                    else {
+                        Log.w(TAG, "Firebase index is out of bound.");
+                    }
+                } catch (NumberFormatException e) {
+                    Log.w(TAG, "Firebase string has to be a number.", e);
+                } catch (DatabaseException e) {
+                    Log.w(TAG, "Firebase values has to be strings.", e);
                 }
             }
 
@@ -90,24 +111,26 @@ public class MainActivity extends AppCompatActivity {
 
     /** Called when the user touches the button */
     private void resetBackgroundColors() {
-        mButtons[0].setBackgroundColor(ContextCompat.getColor(this,R.color.b0Idle));
-        mButtons[1].setBackgroundColor(ContextCompat.getColor(this,R.color.b1Idle));
+        for (int idx=0;idx<BUTTONS_NUM;idx++) {
+            mButtons[idx].setBackgroundColor(ContextCompat.getColor(this, mColorsIdle[idx]));
+        }
     }
 
-    public void sendButton0Event(View view) {
-        Log.d(TAG, "Button 0 Pressed");
-        sendButtonEventToFirebase(0);
-    }
+    public void sendButtonEvent(View view) {
+        for (int idx=0;idx<BUTTONS_NUM;idx++) {
+            View butt = mButtons[idx];
+            if (butt==view) {
+                Log.d(TAG, butt.toString()+" Pressed");
+                sendButtonEventToFirebase(idx);
+            }
+        }
 
-    public void sendButton1Event(View view) {
-        Log.d(TAG,"Button 1 Pressed");
-        sendButtonEventToFirebase(1);
     }
 
     public void sendButtonEventToFirebase(int btnIdx) {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference keyRef = database.getReference("key");
-        keyRef.setValue(btnIdx);
+        keyRef.setValue(String.valueOf(btnIdx));
 
     }
 
@@ -116,6 +139,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void animateButtons() {
-        mButtons[0].startAnimation(mAnimationBlink);
-        mButtons[1].startAnimation(mAnimationBlink);
-    }}
+        for (int idx=0;idx<BUTTONS_NUM;idx++) {
+            mButtons[idx].startAnimation(mAnimationBlink);
+        }
+    }
+}
