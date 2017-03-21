@@ -16,11 +16,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.reactivestreams.Subscription;
+
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.*;
 import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 
 public class MainActivity extends AppCompatActivity {
@@ -35,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
     int mColorsActive[] = new int[BUTTONS_NUM];
 
     Long mKeyCounter = -1L;
+
+    private Disposable subscription;
 
     Animation mAnimationBlink;
 
@@ -77,12 +82,17 @@ public class MainActivity extends AppCompatActivity {
                 // whenever data at this location is updated.
                 String value = dataSnapshot.getValue(String.class);
                 Log.d(TAG, "Status value is: " + value);
+
+                if ((subscription!=null)&& !subscription.isDisposed()) {
+                    subscription.dispose();
+                }
+
                 switch (value) {
                     case "error":
                         animateButtons();
                         break;
                     case "play":
-                        Observable.interval(1, TimeUnit.SECONDS).subscribe(new Consumer<Long>() {
+                        subscription = Observable.interval(1, TimeUnit.SECONDS).subscribe(new Consumer<Long>() {
                             @Override
                             public void accept(@NonNull Long aLong) throws Exception {
                                 int v = new Random().nextInt(BUTTONS_NUM);
