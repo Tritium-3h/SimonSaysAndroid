@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">SimonSaysFirebase</string>
+    <string name="b0Label">0</string>
+    <string name="b1Label">1</string>
+    <string name="b2Label">2</string>
+    <string name="b3Label">3</string>
 </resources>

@@ -16,12 +16,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import org.reactivestreams.Subscription;
-
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.*;
+import io.reactivex.Observable;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
@@ -54,10 +52,10 @@ public class MainActivity extends AppCompatActivity {
         mButtons[2] = (Button) findViewById(R.id.button2);
         mButtons[3] = (Button) findViewById(R.id.button3);
 
-        mButtonLabels[0] = "0";
-        mButtonLabels[1] = "1";
-        mButtonLabels[2] = "2";
-        mButtonLabels[3] = "3";
+        mButtonLabels[0] = getString(R.string.b0Label);
+        mButtonLabels[1] = getString(R.string.b1Label);
+        mButtonLabels[2] = getString(R.string.b2Label);
+        mButtonLabels[3] = getString(R.string.b3Label);
 
         mColorsIdle[0] = R.color.b0Idle;
         mColorsIdle[1] = R.color.b1Idle;
