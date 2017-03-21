@@ -1,5 +1,7 @@
 package com.wbigger.simonsaysfirebase;
 
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -32,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     static final int BUTTONS_NUM = 4;
     Button mButtons[] = new Button[BUTTONS_NUM];
     String mButtonLabels[] = new String[BUTTONS_NUM];
+    int mButtonTones[] = new int[BUTTONS_NUM];
     int mColorsIdle[] = new int[BUTTONS_NUM];
     int mColorsActive[] = new int[BUTTONS_NUM];
 
@@ -40,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
     private Disposable subscription;
 
     Animation mAnimationBlink;
+
+    ToneGenerator mToneGen = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
 
 
     @Override
@@ -56,6 +61,11 @@ public class MainActivity extends AppCompatActivity {
         mButtonLabels[1] = getString(R.string.b1Label);
         mButtonLabels[2] = getString(R.string.b2Label);
         mButtonLabels[3] = getString(R.string.b3Label);
+
+        mButtonTones[0] = ToneGenerator.TONE_DTMF_0;
+        mButtonTones[1] = ToneGenerator.TONE_DTMF_1;
+        mButtonTones[2] = ToneGenerator.TONE_DTMF_2;
+        mButtonTones[3] = ToneGenerator.TONE_DTMF_3;
 
         mColorsIdle[0] = R.color.b0Idle;
         mColorsIdle[1] = R.color.b1Idle;
@@ -90,6 +100,9 @@ public class MainActivity extends AppCompatActivity {
                         animateButtons();
                         break;
                     case "play":
+                        // this is for debug only
+                        // in the final version, in "play" should do nothing special
+                        // maybe mute the key when pressed
                         subscription = Observable.interval(1, TimeUnit.SECONDS).subscribe(new Consumer<Long>() {
                             @Override
                             public void accept(@NonNull Long aLong) throws Exception {
@@ -98,7 +111,8 @@ public class MainActivity extends AppCompatActivity {
                                 sendLedEventToFirebase(v, aLong);
                             }
                         });
-
+                    case "listening":
+                        mKeyCounter = -1L;
                         break;
                     default:
                         //do nothing
@@ -173,6 +187,8 @@ public class MainActivity extends AppCompatActivity {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference keyRef = database.getReference("key");
         keyRef.setValue(new SimonEvent(mButtonLabels[btnIdx],counter));
+
+        playSound(btnIdx);
     }
 
     public void sendLedEventToFirebase(int btnIdx, Long counter) {
@@ -183,6 +199,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void setBackgroundColor(Button button, int color) {
         button.setBackgroundColor(ContextCompat.getColor(this, color));
+    }
+
+    private void playSound(int btnIdx) {
+        mToneGen.startTone(mButtonTones[btnIdx], 200);
     }
 
     private void animateButtons() {
