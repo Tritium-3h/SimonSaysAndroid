@@ -142,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
                     int btnIdx = java.util.Arrays.asList(mButtonLabels).indexOf(value);
                     if ((btnIdx >= 0) && (btnIdx < BUTTONS_NUM)) {
                         setBackgroundColor(mButtons[btnIdx], mColorsActive[btnIdx]);
+                        playSound(btnIdx);
                     } else {
                         Log.w(TAG, "Firebase index is out of bound.");
                     }
