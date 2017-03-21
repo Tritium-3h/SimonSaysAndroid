@@ -26,15 +26,15 @@ import io.reactivex.functions.Consumer;
 public class MainActivity extends AppCompatActivity {
 
 
-
     static final String TAG = "MainActivity";
 
     static final int BUTTONS_NUM = 4;
     Button mButtons[] = new Button[BUTTONS_NUM];
+    String mButtonLabels[] = new String[BUTTONS_NUM];
     int mColorsIdle[] = new int[BUTTONS_NUM];
     int mColorsActive[] = new int[BUTTONS_NUM];
 
-    Long lastCounter = -1L;
+    Long mKeyCounter = -1L;
 
     Animation mAnimationBlink;
 
@@ -48,6 +48,11 @@ public class MainActivity extends AppCompatActivity {
         mButtons[1] = (Button) findViewById(R.id.button1);
         mButtons[2] = (Button) findViewById(R.id.button2);
         mButtons[3] = (Button) findViewById(R.id.button3);
+
+        mButtonLabels[0] = "0";
+        mButtonLabels[1] = "1";
+        mButtonLabels[2] = "2";
+        mButtonLabels[3] = "3";
 
         mColorsIdle[0] = R.color.b0Idle;
         mColorsIdle[1] = R.color.b1Idle;
@@ -77,12 +82,12 @@ public class MainActivity extends AppCompatActivity {
                         animateButtons();
                         break;
                     case "play":
-                        Observable.interval(1,TimeUnit.SECONDS).subscribe(new Consumer<Long>() {
+                        Observable.interval(1, TimeUnit.SECONDS).subscribe(new Consumer<Long>() {
                             @Override
                             public void accept(@NonNull Long aLong) throws Exception {
                                 int v = new Random().nextInt(BUTTONS_NUM);
-                                Log.d(TAG, "Sending color: "+v);
-                                sendLedEventToFirebase(v,aLong);
+                                Log.d(TAG, "Sending color: " + v);
+                                sendLedEventToFirebase(v, aLong);
                             }
                         });
 
@@ -109,17 +114,16 @@ public class MainActivity extends AppCompatActivity {
                 resetBackgroundColors();
                 try {
                     Long newCounter = Long.valueOf(dataSnapshot.child("counter").getValue(String.class));
-                    if (!newCounter.equals(lastCounter)) {
-                        String value = dataSnapshot.child("color").getValue(String.class);
-                        Log.d(TAG, "Color value is: " + value);
-                        int valueInt = Integer.valueOf(value);
-                        if ((valueInt >= 0) && (valueInt < BUTTONS_NUM)) {
-                            setBackgroundColor(mButtons[valueInt], mColorsActive[valueInt]);
-                        } else {
-                            Log.w(TAG, "Firebase index is out of bound.");
-                        }
+                    String value = dataSnapshot.child("color").getValue(String.class);
+                    Log.d(TAG, "Color value is: " + value);
+                    // find the index of the button with the desired label
+                    int btnIdx = java.util.Arrays.asList(mButtonLabels).indexOf(value);
+                    if ((btnIdx >= 0) && (btnIdx < BUTTONS_NUM)) {
+                        setBackgroundColor(mButtons[btnIdx], mColorsActive[btnIdx]);
+                    } else {
+                        Log.w(TAG, "Firebase index is out of bound.");
                     }
-                    lastCounter = newCounter;
+
                 } catch (NumberFormatException e) {
                     Log.w(TAG, "Firebase string has to be a number.", e);
                 } catch (DatabaseException e) {
@@ -150,25 +154,23 @@ public class MainActivity extends AppCompatActivity {
             View butt = mButtons[idx];
             if (butt == view) {
                 Log.d(TAG, butt.toString() + " Pressed");
-                sendButtonEventToFirebase(idx);
+                mKeyCounter++;
+                sendButtonEventToFirebase(idx,mKeyCounter);
             }
         }
 
     }
 
-    public void sendButtonEventToFirebase(int btnIdx) {
+    public void sendButtonEventToFirebase(int btnIdx,Long counter) {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference keyRef = database.getReference("key");
-        keyRef.setValue(String.valueOf(btnIdx));
-
+        keyRef.setValue(new SimonEvent(mButtonLabels[btnIdx],counter));
     }
 
     public void sendLedEventToFirebase(int btnIdx, Long counter) {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference keyRef = database.getReference("led");
-        keyRef.child("counter").setValue(String.valueOf(counter));
-        keyRef.child("color").setValue(String.valueOf(btnIdx));
-
+        DatabaseReference ledRef = database.getReference("led");
+        ledRef.setValue(new SimonEvent(mButtonLabels[btnIdx],counter));
     }
 
     public void setBackgroundColor(Button button, int color) {
