@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Long mKeyCounter = -1L;
 
-    private Disposable subscription;
+    private Disposable mSubscription;
 
     private final Animation mAnimationBlink = AnimationUtils.loadAnimation(this, R.anim.blink_animation);
 
@@ -89,8 +89,8 @@ public class MainActivity extends AppCompatActivity {
                 String value = dataSnapshot.getValue(String.class);
                 Log.d(TAG, "Status value is: " + value);
 
-                if ((subscription!=null)&& !subscription.isDisposed()) {
-                    subscription.dispose();
+                if ((mSubscription != null) && !mSubscription.isDisposed()) {
+                    mSubscription.dispose();
                 }
 
                 switch (value) {
@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
                         // this is for debug only
                         // in the final version, in "play" should do nothing special
                         // maybe mute the key when pressed
-                        subscription = Observable.interval(1, TimeUnit.SECONDS).subscribe(new Consumer<Long>() {
+                        mSubscription = Observable.interval(1, TimeUnit.SECONDS).subscribe(new Consumer<Long>() {
                             @Override
                             public void accept(@NonNull Long aLong) throws Exception {
                                 int v = new Random().nextInt(BUTTONS_NUM);
@@ -129,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
         ledRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                //if (status)
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
                 resetBackgroundColors();
