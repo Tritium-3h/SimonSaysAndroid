@@ -31,20 +31,20 @@ public class MainActivity extends AppCompatActivity {
 
     static final String TAG = "MainActivity";
 
-    static final int BUTTONS_NUM = 4;
-    Button mButtons[] = new Button[BUTTONS_NUM];
-    String mButtonLabels[] = new String[BUTTONS_NUM];
-    int mButtonTones[] = new int[BUTTONS_NUM];
-    int mColorsIdle[] = new int[BUTTONS_NUM];
-    int mColorsActive[] = new int[BUTTONS_NUM];
+    private static final int BUTTONS_NUM = 4;
+    private final Button mButtons[] = new Button[BUTTONS_NUM];
+    private final String mButtonLabels[] = new String[BUTTONS_NUM];
+    private final int mButtonTones[] = new int[BUTTONS_NUM];
+    private final int mColorsIdle[] = new int[BUTTONS_NUM];
+    private final int mColorsActive[] = new int[BUTTONS_NUM];
 
-    Long mKeyCounter = -1L;
+    private Long mKeyCounter = -1L;
 
     private Disposable subscription;
 
-    Animation mAnimationBlink;
+    private final Animation mAnimationBlink = AnimationUtils.loadAnimation(this, R.anim.blink_animation);
 
-    ToneGenerator mToneGen = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
+    private final ToneGenerator mToneGen = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
 
 
     @Override
@@ -76,8 +76,6 @@ public class MainActivity extends AppCompatActivity {
         mColorsActive[1] = R.color.b1Active;
         mColorsActive[2] = R.color.b2Active;
         mColorsActive[3] = R.color.b3Active;
-
-        mAnimationBlink = AnimationUtils.loadAnimation(this, R.anim.blink_animation);
 
         // Write a message to the database
         FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -135,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
                 // whenever data at this location is updated.
                 resetBackgroundColors();
                 try {
-                    Long newCounter = Long.valueOf(dataSnapshot.child("counter").getValue(String.class));
                     String value = dataSnapshot.child("color").getValue(String.class);
                     Log.d(TAG, "Color value is: " + value);
                     // find the index of the button with the desired label
