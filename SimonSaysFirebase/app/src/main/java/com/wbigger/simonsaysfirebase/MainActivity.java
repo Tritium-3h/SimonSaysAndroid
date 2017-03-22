@@ -28,7 +28,6 @@ import io.reactivex.functions.Consumer;
 
 public class MainActivity extends AppCompatActivity {
 
-
     static final String TAG = "MainActivity";
 
     private static final int BUTTONS_NUM = 4;
@@ -40,9 +39,15 @@ public class MainActivity extends AppCompatActivity {
 
     private Long mKeyCounter = -1L;
 
+    private static final int STATUS_PLAY = 0;
+    private static final int STATUS_LISTENING = 1;
+    private static final int STATUS_ERROR = 2;
+
+    private int mStatus = STATUS_LISTENING;
+
     private Disposable mSubscription;
 
-    private final Animation mAnimationBlink = AnimationUtils.loadAnimation(this, R.anim.blink_animation);
+    private Animation mAnimationBlink;
 
     private final ToneGenerator mToneGen = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
 
@@ -77,6 +82,8 @@ public class MainActivity extends AppCompatActivity {
         mColorsActive[2] = R.color.b2Active;
         mColorsActive[3] = R.color.b3Active;
 
+        mAnimationBlink = AnimationUtils.loadAnimation(this, R.anim.blink_animation);
+
         // Write a message to the database
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference statusRef = database.getReference("status");
@@ -87,20 +94,24 @@ public class MainActivity extends AppCompatActivity {
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
                 String value = dataSnapshot.getValue(String.class);
-                Log.d(TAG, "Status value is: " + value);
+                Log.d(TAG, "Firebase status value is: " + value);
 
                 if ((mSubscription != null) && !mSubscription.isDisposed()) {
+                    Log.d(TAG, "Disposing subscription");
                     mSubscription.dispose();
                 }
 
                 switch (value) {
                     case "error":
+                        mStatus = STATUS_ERROR;
                         animateButtons();
                         break;
                     case "play":
+                        mStatus = STATUS_PLAY;
                         // this is for debug only
                         // in the final version, in "play" should do nothing special
                         // maybe mute the key when pressed
+                        Log.d(TAG, "Subscribing play");
                         mSubscription = Observable.interval(1, TimeUnit.SECONDS).subscribe(new Consumer<Long>() {
                             @Override
                             public void accept(@NonNull Long aLong) throws Exception {
@@ -109,12 +120,16 @@ public class MainActivity extends AppCompatActivity {
                                 sendLedEventToFirebase(v, aLong);
                             }
                         });
+                        //break;
                     case "listening":
+                        mStatus = STATUS_LISTENING;
                         mKeyCounter = -1L;
                         break;
                     default:
-                        //do nothing
+                        // default to listening
+                        mStatus = STATUS_LISTENING;
                 }
+                Log.d(TAG, "Internal status value is: " + mStatus);
             }
 
             @Override
@@ -129,26 +144,27 @@ public class MainActivity extends AppCompatActivity {
         ledRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                //if (status)
-                // This method is called once with the initial value and again
-                // whenever data at this location is updated.
-                resetBackgroundColors();
-                try {
-                    String value = dataSnapshot.child("color").getValue(String.class);
-                    Log.d(TAG, "Color value is: " + value);
-                    // find the index of the button with the desired label
-                    int btnIdx = java.util.Arrays.asList(mButtonLabels).indexOf(value);
-                    if ((btnIdx >= 0) && (btnIdx < BUTTONS_NUM)) {
-                        setBackgroundColor(mButtons[btnIdx], mColorsActive[btnIdx]);
-                        playSound(btnIdx);
-                    } else {
-                        Log.w(TAG, "Firebase index is out of bound.");
-                    }
+                if (mStatus == STATUS_PLAY) {
+                    // This method is called once with the initial value and again
+                    // whenever data at this location is updated.
+                    resetBackgroundColors();
+                    try {
+                        String value = dataSnapshot.child("color").getValue(String.class);
+                        Log.d(TAG, "Color value is: " + value);
+                        // find the index of the button with the desired label
+                        int btnIdx = java.util.Arrays.asList(mButtonLabels).indexOf(value);
+                        if ((btnIdx >= 0) && (btnIdx < BUTTONS_NUM)) {
+                            setBackgroundColor(mButtons[btnIdx], mColorsActive[btnIdx]);
+                            playSound(btnIdx);
+                        } else {
+                            Log.w(TAG, "Firebase index is out of bound.");
+                        }
 
-                } catch (NumberFormatException e) {
-                    Log.w(TAG, "Firebase string has to be a number.", e);
-                } catch (DatabaseException e) {
-                    Log.w(TAG, "Firebase values has to be strings.", e);
+                    } catch (NumberFormatException e) {
+                        Log.w(TAG, "Firebase string has to be a number.", e);
+                    } catch (DatabaseException e) {
+                        Log.w(TAG, "Firebase values has to be strings.", e);
+                    }
                 }
             }
 
@@ -171,22 +187,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void sendButtonEvent(View view) {
-        for (int idx = 0; idx < BUTTONS_NUM; idx++) {
-            View butt = mButtons[idx];
-            if (butt == view) {
-                Log.d(TAG, butt.toString() + " Pressed");
-                mKeyCounter++;
-                sendButtonEventToFirebase(idx,mKeyCounter);
+        if (mStatus == STATUS_LISTENING) {
+            for (int idx = 0; idx < BUTTONS_NUM; idx++) {
+                View butt = mButtons[idx];
+                if (butt == view) {
+                    Log.d(TAG, "Button " + mButtonLabels[idx] + " pressed");
+                    mKeyCounter++;
+                    sendButtonEventToFirebase(idx, mKeyCounter);
+                }
             }
         }
-
     }
 
     public void sendButtonEventToFirebase(int btnIdx,Long counter) {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference keyRef = database.getReference("key");
         keyRef.setValue(new SimonEvent(mButtonLabels[btnIdx],counter));
-
         playSound(btnIdx);
     }
 
