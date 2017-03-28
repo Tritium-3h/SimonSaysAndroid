@@ -1,6 +1,7 @@
 package com.wbigger.simonsaysfirebase;
 
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -41,13 +42,15 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int STATUS_PLAY = 0;
     private static final int STATUS_LISTENING = 1;
-    private static final int STATUS_ERROR = 2;
+    private static final int STATUS_LOSE = 2;
+    private static final int STATUS_WIN = 3;
 
     private int mStatus = STATUS_LISTENING;
 
     private Disposable mSubscription;
 
-    private Animation mAnimationBlink;
+    private Animation mAnimationLose;
+    private Animation mAnimationWin;
 
     private final ToneGenerator mToneGen = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
 
@@ -82,7 +85,8 @@ public class MainActivity extends AppCompatActivity {
         mColorsActive[2] = R.color.b2Active;
         mColorsActive[3] = R.color.b3Active;
 
-        mAnimationBlink = AnimationUtils.loadAnimation(this, R.anim.blink_animation);
+        mAnimationLose = AnimationUtils.loadAnimation(this, R.anim.blink_animation);
+        mAnimationWin = AnimationUtils.loadAnimation(this, R.anim.happy_animation);
 
         // Write a message to the database
         FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -102,9 +106,13 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 switch (value) {
-                    case "error":
-                        mStatus = STATUS_ERROR;
-                        animateButtons();
+                    case "win":
+                        mStatus = STATUS_WIN;
+                        winEvent();
+                        break;
+                    case "lose":
+                        mStatus = STATUS_LOSE;
+                        loseEvent();
                         break;
                     case "play":
                         mStatus = STATUS_PLAY;
@@ -220,9 +228,23 @@ public class MainActivity extends AppCompatActivity {
         mToneGen.startTone(mButtonTones[btnIdx], 200);
     }
 
-    private void animateButtons() {
+    private void winEvent() {
+        // play sound
+        final MediaPlayer mediaPlayer = MediaPlayer.create(this, R.raw.win);
+        mediaPlayer.start();
+        // animate buttons
         for (int idx = 0; idx < BUTTONS_NUM; idx++) {
-            mButtons[idx].startAnimation(mAnimationBlink);
+            mButtons[idx].startAnimation(mAnimationWin);
+        }
+    }
+
+    private void loseEvent() {
+        // play sound
+        final MediaPlayer mediaPlayer = MediaPlayer.create(this, R.raw.lose);
+        mediaPlayer.start();
+        // animate buttons
+        for (int idx = 0; idx < BUTTONS_NUM; idx++) {
+            mButtons[idx].startAnimation(mAnimationLose);
         }
     }
 }
