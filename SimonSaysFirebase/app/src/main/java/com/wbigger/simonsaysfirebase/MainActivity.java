@@ -19,14 +19,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
-
-import io.reactivex.Observable;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-
 public class MainActivity extends AppCompatActivity {
 
     static final String TAG = "MainActivity";
@@ -40,19 +32,22 @@ public class MainActivity extends AppCompatActivity {
 
     private Long mKeyCounter = -1L;
 
-    private static final String STATUS_PLAY_STRING = "play";
-    private static final String STATUS_LISTENING_STRING = "listening";
+    private static final String STATUS_PLAY_LED_STRING = "play";
+    private static final String STATUS_LISTENING_KEY_STRING = "listening";
     private static final String STATUS_LOSE_STRING = "lose";
     private static final String STATUS_WIN_STRING = "win";
 
-    private static final int STATUS_PLAY = 0;
-    private static final int STATUS_LISTENING = 1;
+    private static final int STATUS_PLAY_LED = 0;
+    private static final int STATUS_LISTENING_KEY = 1;
     private static final int STATUS_LOSE = 2;
     private static final int STATUS_WIN = 3;
 
-    private int mStatus = STATUS_LISTENING;
+    private static final String DB_REF_LED = "led";
+    private static final String DB_REF_KEY = "key";
+    private static final String DB_REF_STATUS = "status";
+    private static final String DB_REF_COLOR = "color";
 
-    private Disposable mSubscription;
+    private int mStatus = STATUS_LISTENING_KEY;
 
     private Animation mAnimationLose;
     private Animation mAnimationWin;
@@ -95,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Write a message to the database
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference statusRef = database.getReference("status");
+        DatabaseReference statusRef = database.getReference(DB_REF_STATUS);
         // Read from the database
         statusRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -104,11 +99,6 @@ public class MainActivity extends AppCompatActivity {
                 // whenever data at this location is updated.
                 String value = dataSnapshot.getValue(String.class);
                 Log.d(TAG, "Firebase status value is: " + value);
-
-                if ((mSubscription != null) && !mSubscription.isDisposed()) {
-                    Log.d(TAG, "Disposing subscription");
-                    mSubscription.dispose();
-                }
 
                 switch (value) {
                     case STATUS_WIN_STRING:
@@ -119,28 +109,16 @@ public class MainActivity extends AppCompatActivity {
                         mStatus = STATUS_LOSE;
                         loseEvent();
                         break;
-                    case STATUS_PLAY_STRING:
-                        mStatus = STATUS_PLAY;
-                        // this is for debug only
-                        // in the final version, in "play" should do nothing special
-                        // maybe mute the key when pressed
-                        Log.d(TAG, "Subscribing play");
-                        mSubscription = Observable.interval(1, TimeUnit.SECONDS).subscribe(new Consumer<Long>() {
-                            @Override
-                            public void accept(@NonNull Long aLong) throws Exception {
-                                int v = new Random().nextInt(BUTTONS_NUM);
-                                Log.d(TAG, "Sending color: " + v);
-                                sendLedEventToFirebase(v, aLong);
-                            }
-                        });
-                        //break;
-                    case STATUS_LISTENING_STRING:
-                        mStatus = STATUS_LISTENING;
+                    case STATUS_PLAY_LED_STRING:
+                        mStatus = STATUS_PLAY_LED;
+                        break;
+                    case STATUS_LISTENING_KEY_STRING:
+                        mStatus = STATUS_LISTENING_KEY;
                         mKeyCounter = -1L;
                         break;
                     default:
                         // default to listening
-                        mStatus = STATUS_LISTENING;
+                        mStatus = STATUS_LISTENING_KEY;
                 }
                 Log.d(TAG, "Internal status value is: " + mStatus);
             }
@@ -152,17 +130,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        DatabaseReference ledRef = database.getReference("led");
+        DatabaseReference ledRef = database.getReference(DB_REF_LED);
         // Read from the database
         ledRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (mStatus == STATUS_PLAY) {
+                if (mStatus == STATUS_PLAY_LED) {
                     // This method is called once with the initial value and again
                     // whenever data at this location is updated.
                     resetBackgroundColors();
                     try {
-                        String value = dataSnapshot.child("color").getValue(String.class);
+                        String value = dataSnapshot.child(DB_REF_COLOR).getValue(String.class);
                         Log.d(TAG, "Color value is: " + value);
                         // find the index of the button with the desired label
                         int btnIdx = java.util.Arrays.asList(mButtonLabels).indexOf(value);
@@ -200,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void sendButtonEvent(View view) {
-        if (mStatus == STATUS_LISTENING) {
+        if (mStatus == STATUS_LISTENING_KEY) {
             for (int idx = 0; idx < BUTTONS_NUM; idx++) {
                 View butt = mButtons[idx];
                 if (butt == view) {
@@ -214,14 +192,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void sendButtonEventToFirebase(int btnIdx,Long counter) {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference keyRef = database.getReference("key");
+        DatabaseReference keyRef = database.getReference(DB_REF_KEY);
         keyRef.setValue(new SimonEvent(mButtonLabels[btnIdx],counter));
         playSound(btnIdx);
     }
 
     public void sendLedEventToFirebase(int btnIdx, Long counter) {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference ledRef = database.getReference("led");
+        DatabaseReference ledRef = database.getReference(DB_REF_LED);
         ledRef.setValue(new SimonEvent(mButtonLabels[btnIdx],counter));
     }
 
