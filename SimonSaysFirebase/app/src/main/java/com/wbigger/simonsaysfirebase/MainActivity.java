@@ -40,6 +40,11 @@ public class MainActivity extends AppCompatActivity {
 
     private Long mKeyCounter = -1L;
 
+    private static final String STATUS_PLAY_STRING = "play";
+    private static final String STATUS_LISTENING_STRING = "listening";
+    private static final String STATUS_LOSE_STRING = "lose";
+    private static final String STATUS_WIN_STRING = "win";
+
     private static final int STATUS_PLAY = 0;
     private static final int STATUS_LISTENING = 1;
     private static final int STATUS_LOSE = 2;
@@ -106,15 +111,15 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 switch (value) {
-                    case "win":
+                    case STATUS_WIN_STRING:
                         mStatus = STATUS_WIN;
                         winEvent();
                         break;
-                    case "lose":
+                    case STATUS_LOSE_STRING:
                         mStatus = STATUS_LOSE;
                         loseEvent();
                         break;
-                    case "play":
+                    case STATUS_PLAY_STRING:
                         mStatus = STATUS_PLAY;
                         // this is for debug only
                         // in the final version, in "play" should do nothing special
@@ -129,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         });
                         //break;
-                    case "listening":
+                    case STATUS_LISTENING_STRING:
                         mStatus = STATUS_LISTENING;
                         mKeyCounter = -1L;
                         break;
