@@ -197,12 +197,6 @@ public class MainActivity extends AppCompatActivity {
         playSound(btnIdx);
     }
 
-    public void sendLedEventToFirebase(int btnIdx, Long counter) {
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference ledRef = database.getReference(DB_REF_LED);
-        ledRef.setValue(new SimonEvent(mButtonLabels[btnIdx],counter));
-    }
-
     public void setBackgroundColor(Button button, int color) {
         button.setBackgroundColor(ContextCompat.getColor(this, color));
     }
